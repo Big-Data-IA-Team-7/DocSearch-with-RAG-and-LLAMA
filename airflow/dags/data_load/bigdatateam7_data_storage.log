@@ -1,0 +1,2 @@
+2024-10-28 00:15:53,709 - ERROR - Error in scrape_data: Message: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+
