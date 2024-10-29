@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "docsearch-with-rag-and-llama"
+version = "0.1.0"
+description = ""
+authors = ["Pragnesh Anekal <72695068+Pragnesh260@users.noreply.github.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+llama-index-core = "^0.11.19"
+llama-parse = "^0.5.11"
+llama-index-readers-file = "^0.2.2"
+python-dotenv = "^1.0.1"
+llama-index-embeddings-nvidia = "^0.2.3"
+llama-index-readers-opendal = "^0.0.1"
+pymupdf = "1.24.10"
+llama-index-llms-nvidia = "^0.2.6"
+boto3 = "^1.35.49"
+llama-index-vector-stores-milvus = "^0.2.7"
+openpyxl = "^3.1.5"
+torch = "^2.5.0"
+llama-index-embeddings-openai = "^0.2.5"
+llama-index-vector-stores-pinecone = "^0.2.1"
+pinecone-client = ">=3.0.0"
+googleapis-common-protos = "^1.65.0"
+pinecone = {version = "5.1.0", extras = ["grpc"]}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
