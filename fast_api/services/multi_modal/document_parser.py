@@ -1,7 +1,7 @@
 import os
 import fitz
 from llama_index.core import Document
-from utils import (
+from fast_api.services.multi_modal.utils import (
     describe_image, is_graph, process_graph, extract_text_around_item, 
     process_text_blocks
 )

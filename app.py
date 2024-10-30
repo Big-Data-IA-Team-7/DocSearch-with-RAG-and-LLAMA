@@ -18,7 +18,7 @@ import time
 nest_asyncio.apply()
 
 from data_s3_pdf import download_file
-from document_parser import load_multimodal_data
+from fast_api.services.multi_modal.document_parser import load_multimodal_data
 
 def initialize_settings():
     

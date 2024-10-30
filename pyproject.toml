@@ -25,6 +25,8 @@ llama-index-vector-stores-pinecone = "^0.2.1"
 pinecone-client = ">=3.0.0"
 googleapis-common-protos = "^1.65.0"
 pinecone = {version = "5.1.0", extras = ["grpc"]}
+fastapi = "^0.115.4"
+uvicorn = "^0.32.0"
 
 
 [build-system]
