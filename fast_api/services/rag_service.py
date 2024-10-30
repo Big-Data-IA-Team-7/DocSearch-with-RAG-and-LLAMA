@@ -1,28 +1,19 @@
-import os
-
-from pinecone.grpc import PineconeGRPC
 from pinecone import ServerlessSpec
 from llama_index.vector_stores.pinecone import PineconeVectorStore
 from llama_index.core import VectorStoreIndex, StorageContext
 
-from fast_api.config.config_settings import initalize_pinecone_object
-
-def create_vector_index(index_name, documents):
-    api_key = os.environ["PINECONE_API_KEY"]
-
-    pc = PineconeGRPC(api_key=api_key)
-
-    pc.create_index(
+def create_vector_index(pinecone_client, index_name, documents):
+    pinecone_client.create_index(
         name=index_name,
         dimension=1024, # Replace with your model dimensions
         metric="cosine", # Replace with your model metric
         spec=ServerlessSpec(
             cloud="aws",
             region="us-east-1"
-        ) 
+        )
     )
 
-    pinecone_index = pc.Index(index_name)
+    pinecone_index = pinecone_client.Index(index_name)
 
     vector_store = PineconeVectorStore(pinecone_index=pinecone_index)
 
@@ -32,15 +23,12 @@ def create_vector_index(index_name, documents):
         documents, storage_context=storage_context
     )
 
-    pinecone_index.describe_index_stats()
-
     return index
 
 
-def query_vector_index(index_name, user_question):
-    pc = initalize_pinecone_object()
+def query_vector_index(index_name, user_question, pinecone_client):
 
-    pinecone_index = pc.Index(index_name)
+    pinecone_index = pinecone_client.Index(index_name)
 
     # Initialize VectorStore
     vector_store = PineconeVectorStore(pinecone_index=pinecone_index)

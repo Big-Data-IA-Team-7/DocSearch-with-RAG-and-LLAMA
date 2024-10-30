@@ -6,7 +6,7 @@ import requests
 import tempfile
 from io import BytesIO
 
-def generate_presigned_url(expiration: int = 3600) -> str:
+def generate_presigned_url(pdf_name, expiration: int = 3600) -> str:
     """
     Generates a pre-signed URL for an S3 object that allows temporary access.
 
@@ -17,7 +17,7 @@ def generate_presigned_url(expiration: int = 3600) -> str:
     Returns:
         str: The pre-signed URL allowing temporary access to the S3 object, or None if an error occurs.
     """
-    key = 'pdfs/1_document.pdf'
+    key = f'pdfs/{pdf_name}'
     
     try:
 
@@ -34,7 +34,7 @@ def generate_presigned_url(expiration: int = 3600) -> str:
         print(f"Error generating pre-signed URL: {e}")
         return None
 
-def download_file() -> dict:
+def download_file(pdf_name) -> dict:
     """
     Downloads a file from the given URL and saves it as a temporary file with the appropriate extension.
 
@@ -48,7 +48,7 @@ def download_file() -> dict:
             - "extension" (str): The file extension of the downloaded file.
     """
     # Parse the URL to extract the file name
-    file_name = generate_presigned_url()
+    file_name = generate_presigned_url(pdf_name)
     parsed_url = urlparse(file_name)
     path = unquote(parsed_url.path)
     filename = os.path.basename(path)
@@ -64,4 +64,4 @@ def download_file() -> dict:
     response.raise_for_status()  # Ensure the request was successful
     file_content = response.content
     
-    return {"name": filename, "content": BytesIO(file_content), "extension": extension}
+    return {"file_name": filename, "pdf_content": BytesIO(file_content)}

@@ -31,7 +31,7 @@ def initialize_summary_settings():
     Settings.embed_model = embed_model
     Settings.text_splitter = SentenceSplitter(chunk_size=1000, chunk_overlap=0)
 
-def initalize_pinecone_object():
+def get_pinecone_client():
     api_key = os.environ["PINECONE_API_KEY"]
 
     pc = PineconeGRPC(api_key=api_key)

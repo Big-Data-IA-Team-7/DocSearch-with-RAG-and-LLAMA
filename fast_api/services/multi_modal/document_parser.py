@@ -1,8 +1,7 @@
 import os
 import fitz
 from llama_index.core import Document
-from fast_api.services.multi_modal.utils import (
-    describe_image, is_graph, process_graph, extract_text_around_item, 
+from fast_api.services.multi_modal.utils import (is_graph, process_graph, extract_text_around_item, 
     process_text_blocks
 )
 
@@ -134,21 +133,10 @@ def parse_all_images(filename, page, pagenum, text_blocks):
 def load_multimodal_data(files):
     """Load and process multiple file types."""
     documents = []
-    # file_extension = os.path.splitext(file.name.lower())[1]
-    file_extension = files["extension"]
-    if file_extension in ('.png', '.jpg', '.jpeg'):
-        image_content = files["content"].read()
-        image_text = describe_image(image_content)
-        doc = Document(text=image_text, metadata={"source": files["name"], "type": "image"})
-        documents.append(doc)
-    elif file_extension == '.pdf':
-        try:
-            pdf_documents = get_pdf_documents(files)
-            documents.extend(pdf_documents)
-        except Exception as e:
-            print(f"Error processing PDF {files["name"]}: {e}")
-    else:
-        text = files["content"].read().decode("utf-8")
-        doc = Document(text=text, metadata={"source": files["name"], "type": "text"})
-        documents.append(doc)
+    try:
+        pdf_documents = get_pdf_documents(files)
+        documents.extend(pdf_documents)
+    except Exception as e:
+        print(f"Error processing PDF {files["name"]}: {e}")
+    
     return documents
