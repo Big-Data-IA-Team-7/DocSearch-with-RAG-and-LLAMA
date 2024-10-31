@@ -2,9 +2,9 @@ import os
 import streamlit as st
 import requests
 import pandas as pd
+import base64
 from dotenv import load_dotenv
 from openai import OpenAI
-from document_processors import load_multimodal_data
 
 # Load environment variables
 load_dotenv()
@@ -45,20 +45,33 @@ def download_fragment(file_content: bytes, file_name: str) -> None:
     st.download_button('**Download File**', file_content, file_name=file_name, key="download_file_button")
 
 def multi_modal_rag():
+
+    if 'data_frame' not in st.session_state:
+        st.session_state.data_frame = None
+    if 'file_name' not in st.session_state:
+        st.session_state.file_name = None
+    if 'index' not in st.session_state:
+        st.session_state.index = None
+    if 'history' not in st.session_state:
+        st.session_state.history = None
+    if 'title' not in st.session_state:
+        st.session_state.title = None
+
     st.title('Multi Modal RAG')
 
     # Fetch data from FastAPI endpoint
     response = requests.get(f"{os.getenv('FASTAPI_DEV_URL')}/data/get-data/")
     if response.status_code == 200:
         data = response.json()
-        data_df = pd.DataFrame(data)
+        st.session_state.data_frame = pd.DataFrame(data)
         
-        if not data_df.empty:
-            selected_title = st.selectbox("Select a PDF Title:", ["Select a title"] + data_df['TITLE'].tolist())
+        if not st.session_state.data_frame.empty:
+            selected_title = st.selectbox("Select a PDF Title:", ["Select a title"] + st.session_state.data_frame['TITLE'].tolist())
             
             if selected_title != "Select a title":
-                selected_row = data_df[data_df['TITLE'] == selected_title].iloc[0]
+                selected_row = st.session_state.data_frame[st.session_state.data_frame['TITLE'] == selected_title].iloc[0]
 
+                st.session_state.title = selected_row['TITLE']
                 # Create columns for layout
                 col1, col2 = st.columns([1, 3])
 
@@ -67,28 +80,73 @@ def multi_modal_rag():
                     st.image(selected_row['IMAGE_URL'], width=150)
                 
                     pdf_url = selected_row['PDF_S3_URL']
-                    filename = pdf_url.split("/")[-1]
+                    st.session_state.file_name = pdf_url.split("/")[-1]
                     
                     response_pdf = requests.get(
                         f"{os.getenv('FASTAPI_DEV_URL')}/data/extract-file/",
-                        params={"file_name": filename},
-                        stream=True  # Set stream=True to handle large files efficiently
+                        params={"file_name": st.session_state.file_name},
+                        stream=True
                     )
 
                     if response_pdf.status_code == 200:
 
-                        download_fragment(response_pdf.content, filename)
+                        download_fragment(response_pdf.content, st.session_state.file_name)
 
                     else:
                         st.error("Failed to download the PDF file.")
-                # Display the summary in the second column
+                # Display the title and summary in the second column
                 with col2:
                     st.subheader(selected_row['TITLE'])
                     st.write("**Summary**: ", selected_row['BRIEF_SUMMARY'])
 
                     if st.button("**Chat With PDF**"):
-                        st.warning("Please upload a document first!")
+                        st.session_state.chat_with_pdf = True
+                        with st.spinner("Creating index..."):
 
+                            data = {
+                                "file_name": st.session_state.file_name,
+                            }
+                            
+                            files = {
+                                "pdf_content": (st.session_state.file_name, response_pdf.content, "application/pdf")
+                            }
+
+
+                            response_index = requests.post(
+                                f"{os.getenv('FASTAPI_DEV_URL')}/index/create-index/",
+                                data=data,
+                                files=files
+                            )
+
+                            if response_index.status_code == 200:
+                                st.success("Index created successfully.")
+                            else:
+                                st.error(f"Failed to create index. Status code: {response_index.status_code}")
+                            st.session_state.history = []
+                        st.rerun()
+                    if st.button("**Generate Summary**"):
+                        with st.spinner("Generating summary..."):
+
+                            data = {
+                                "file_name": st.session_state.file_name,
+                            }
+                            
+                            files = {
+                                "pdf_content": (st.session_state.file_name, response_pdf.content, "application/pdf")
+                            }
+
+
+                            response_summary = requests.get(
+                                f"{os.getenv('FASTAPI_DEV_URL')}/query/generate-summary/",
+                                data=data,
+                                files=files
+                            )
+
+                            if response_summary.status_code == 200:
+                                summary = response_summary.json()
+                                st.write("**Summary**: ", summary["response"])
+                            else:
+                                st.error(f"Failed to create index. Status code: {response_summary.status_code}")
         else:
             st.write("No data available.")
     elif response.status_code == 401:

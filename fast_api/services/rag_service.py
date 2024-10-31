@@ -1,6 +1,7 @@
 from pinecone import ServerlessSpec
 from llama_index.vector_stores.pinecone import PineconeVectorStore
-from llama_index.core import VectorStoreIndex, StorageContext
+from llama_index.core import VectorStoreIndex, StorageContext, SummaryIndex
+from llama_index.vector_stores.milvus import MilvusVectorStore
 
 def create_vector_index(pinecone_client, index_name, documents):
     pinecone_client.create_index(
@@ -26,7 +27,7 @@ def create_vector_index(pinecone_client, index_name, documents):
     return index
 
 
-def query_vector_index(index_name, user_question, pinecone_client):
+def retrieve_query(index_name, user_question, pinecone_client):
 
     pinecone_index = pinecone_client.Index(index_name)
 
@@ -40,3 +41,19 @@ def query_vector_index(index_name, user_question, pinecone_client):
     llm_query = summary_query_engine.query(user_question)
 
     return llm_query.response
+
+def generate_summary(documents):
+
+    vector_store = MilvusVectorStore(uri="./milvus_demo.db", dim=1024, overwrite=True) #For CPU only vector store
+
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+
+    summary_index = SummaryIndex.from_documents(
+        documents, storage_context=storage_context
+    )
+
+    summary_query_engine = summary_index.as_query_engine()
+
+    response = summary_query_engine.query("Summarize the document in 200-250 words")
+
+    return response

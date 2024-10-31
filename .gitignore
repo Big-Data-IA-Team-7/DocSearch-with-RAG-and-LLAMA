@@ -166,3 +166,4 @@ cython_debug/
 /vectorstore
 /pipeline_storage
 *.db
+*.lock
