@@ -1,6 +1,5 @@
 import os
 import fitz
-from pptx import Presentation
 import subprocess
 from llama_index.core import Document
 from utils import (

@@ -162,3 +162,7 @@ cython_debug/
 #.idea/
 # Project files:
 .DS_Store
+
+/vectorstore
+/pipeline_storage
+*.db

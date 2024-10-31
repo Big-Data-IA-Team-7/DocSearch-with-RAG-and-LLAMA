@@ -1,6 +1,6 @@
 # data_retrieval.py
 import snowflake.connector
-from config.db_connection import close_my_sql_connection, create_snowflake_connection
+from fast_api.config.config_settings import close_my_sql_connection, create_snowflake_connection
 import pandas as pd
 import boto3
 from urllib.parse import urlparse, unquote
@@ -8,20 +8,12 @@ import os
 import requests
 import tempfile
 from dotenv import load_dotenv 
-from botocore.exceptions import NoCredentialsError
+from io import BytesIO
 
 # Load environment variables from .env file (if applicable)
 load_dotenv()
 
-# from project_logging import logging_module
-
 def fetch_data_from_db() -> pd.DataFrame:
-    """
-    Fetches data from the 'user login' table in the MySQL database and returns it as a pandas DataFrame.
-
-    Returns:
-        pd.DataFrame: A DataFrame containing the data fetched from the database, or None if an error occurs.
-    """
     mydata = None  # Initialize mydata to None
     mydb = None    # Initialize mydb to None
     try:
@@ -71,11 +63,11 @@ def fetch_pdf_urls_from_snowflake():
     cursor = conn.cursor()
     cursor.execute(query)
     
-    pdf_urls = cursor.fetchall()  # Returns list of tuples
+    pdf_urls = cursor.fetchall()
     cursor.close()
     conn.close()
     
-    return [url[0] for url in pdf_urls]  # Extract URL from tuple
+    return [url[0] for url in pdf_urls] 
 
 
 def parse_s3_url(s3_url):
@@ -101,32 +93,36 @@ def download_pdf_from_s3(bucket, key, local_file_name):
     s3.download_file(bucket, key, local_file_name)
     print(f"Downloaded {local_file_name} from S3 bucket {bucket}.")
 
-
-# def generate_presigned_url(bucket_name: str, object_key: str, expiration: int = 3600) -> str:
-#     s3_client = boto3.client('s3')
-#     try:
-#         response = s3_client.generate_presigned_url('get_object',
-#             Params={'Bucket': bucket_name, 'Key': object_key},
-#             ExpiresIn=expiration)
-#         return response
-#     except NoCredentialsError:
-#         raise Exception("Credentials not available.")
-
-
-def generate_presigned_url(bucket_name: str, object_key: str, expiration: int = 3600) -> str:
-    s3_client = boto3.client('s3')
+def generate_presigned_url(pdf_name, expiration: int = 3600) -> str:
+    key = f'pdfs/{pdf_name}'
+    
     try:
-        response = s3_client.generate_presigned_url(
-            'get_object',
-            Params={
-                'Bucket': bucket_name,
-                'Key': object_key,
-                'ResponseContentDisposition': 'inline'  # Ensure the content is displayed inline
-            },
-            ExpiresIn=expiration
-        )
-        return response
-    except NoCredentialsError:
-        raise Exception("Credentials not available.")
+
+        s3 = boto3.client('s3',
+                  aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                  aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
+
+        # Generate pre-signed URL that expires in the given time (default: 1 hour)
+        presigned_url = s3.generate_presigned_url('get_object',
+                                                  Params={'Bucket': os.environ['AWS_S3_BUCKET_NAME'], 'Key': key},
+                                                  ExpiresIn=expiration)
+        return presigned_url
     except Exception as e:
-        raise Exception(f"Error generating presigned URL: {str(e)}")
+        print(f"Error generating pre-signed URL: {e}")
+        return None
+
+def download_file(pdf_name) -> dict:
+    # Parse the URL to extract the file name
+    file_name = generate_presigned_url(pdf_name)
+    parsed_url = urlparse(file_name)
+    path = unquote(parsed_url.path)
+    filename = os.path.basename(path)
+    extension = os.path.splitext(filename)[1]
+
+    # Get the file from the URL
+    response = requests.get(file_name)
+    response.raise_for_status()  # Ensure the request was successful
+    file_content = response.content
+
+    return {"file_name": filename, "pdf_content": BytesIO(file_content), "extension": extension}
+
