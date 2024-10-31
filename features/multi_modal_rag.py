@@ -5,7 +5,6 @@ import pandas as pd
 from dotenv import load_dotenv
 from openai import OpenAI
 from document_processors import load_multimodal_data
-import json
 
 # Load environment variables
 load_dotenv()
@@ -41,8 +40,12 @@ def generate_summary(content):
             summary += chunk.choices[0].delta.content
     return summary
 
-def Home():
-    st.title('RAG BASED Multi Model')
+@st.fragment
+def download_fragment(file_content: bytes, file_name: str) -> None:
+    st.download_button('**Download File**', file_content, file_name=file_name, key="download_file_button")
+
+def multi_modal_rag():
+    st.title('Multi Modal RAG')
 
     # Fetch data from FastAPI endpoint
     response = requests.get(f"{os.getenv('FASTAPI_DEV_URL')}/data/get-data/")
@@ -57,43 +60,33 @@ def Home():
                 selected_row = data_df[data_df['TITLE'] == selected_title].iloc[0]
 
                 # Create columns for layout
-                col1, col2 = st.columns([1, 2])  # Adjust column width ratios as needed
+                col1, col2 = st.columns([1, 3])
 
                 # Display the image in the first column
                 with col1:
-                    st.image(selected_row['IMAGE_URL'], width=250)
-                    st.subheader(selected_row['TITLE'])
+                    st.image(selected_row['IMAGE_URL'], width=150)
                 
                     pdf_url = selected_row['PDF_S3_URL']
-                    response_pdf = requests.get(f"{os.getenv('FASTAPI_DEV_URL')}/data/view_s3_url/?url={pdf_url}")
+                    filename = pdf_url.split("/")[-1]
+                    
+                    response_pdf = requests.get(
+                        f"{os.getenv('FASTAPI_DEV_URL')}/data/extract-file/",
+                        params={"file_name": filename},
+                        stream=True  # Set stream=True to handle large files efficiently
+                    )
+
                     if response_pdf.status_code == 200:
-                        data = response_pdf.json()
-                        presigned_url = data['url']  # Extract the presigned URL
 
-                        # Use Streamlit's download button to download the PDF
-                        st.download_button(
-                            label="Download PDF",
-                            data=requests.get(presigned_url).content,
-                            file_name=selected_row["PDF_S3_URL"].split("/")[-1],
-                            mime="application/pdf"
-                        )
+                        download_fragment(response_pdf.content, filename)
 
-
-
+                    else:
+                        st.error("Failed to download the PDF file.")
                 # Display the summary in the second column
                 with col2:
-                    uploaded_file = st.file_uploader("Upload a document for summarization", type=["pdf", "png", "jpg", "jpeg", "ppt", "pptx"])
+                    st.subheader(selected_row['TITLE'])
+                    st.write("**Summary**: ", selected_row['BRIEF_SUMMARY'])
 
-                    if uploaded_file is not None:
-                        with st.spinner("Processing your file..."):
-                            documents = load_multimodal_data([uploaded_file])  # Process the uploaded file
-                            content = "\n\n".join(doc.text for doc in documents)
-                            summary = generate_summary(content)
-                            st.subheader("Generated Summary")
-                            st.markdown(summary)
-                            st.success("Summary generated successfully!")
-
-                    if st.button("Summarize"):
+                    if st.button("**Chat With PDF**"):
                         st.warning("Please upload a document first!")
 
         else:
