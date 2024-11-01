@@ -2,6 +2,7 @@ import snowflake.connector
 import pandas as pd
 import os
 from data_load.data_storage_log import log_success, log_error
+from data_load.parameter_config import SNOWFLAKE_ACCOUNT, SNOWFLAKE_DATABASE, SNOWFLAKE_PASSWORD, SNOWFLAKE_ROLE, SNOWFLAKE_SCHEMA, SNOWFLAKE_USER, SNOWFLAKE_WAREHOUSE 
 
 def load_dataframe_to_snowflake(**kwargs):
     try:
@@ -13,13 +14,13 @@ def load_dataframe_to_snowflake(**kwargs):
 
         # Connect to Snowflake using credentials from environment variables
         conn = snowflake.connector.connect(
-            user=os.getenv('SNOWFLAKE_USER'),
-            password=os.getenv('SNOWFLAKE_PASSWORD'),
-            account=os.getenv('SNOWFLAKE_ACCOUNT'),
-            warehouse=os.getenv('SNOWFLAKE_WAREHOUSE'),
-            database=os.getenv('SNOWFLAKE_DATABASE'),
-            schema=os.getenv('SNOWFLAKE_SCHEMA'),
-            role=os.getenv('SNOWFLAKE_ROLE')
+            user=SNOWFLAKE_USER,
+            password=SNOWFLAKE_PASSWORD,
+            account=SNOWFLAKE_ACCOUNT,
+            warehouse=SNOWFLAKE_WAREHOUSE,
+            database=SNOWFLAKE_DATABASE,
+            schema=SNOWFLAKE_SCHEMA,
+            role=SNOWFLAKE_ROLE
         )
 
         cursor = conn.cursor()

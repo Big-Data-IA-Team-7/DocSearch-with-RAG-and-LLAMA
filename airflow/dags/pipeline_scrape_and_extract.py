@@ -3,11 +3,9 @@ from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 from data_load.scrape_data import scrape_data
 from data_load.download_and_upload_files_to_s3 import download_and_upload_files_to_s3
-from data_load.upload_to_s3 import upload_files_to_s3
 from data_load.prepare_dataframe import prepare_dataframe
 from data_load.load_to_snowflake import load_dataframe_to_snowflake
-import os
-from dotenv import load_dotenv
+
 
 # Load environment variables 
 load_dotenv()

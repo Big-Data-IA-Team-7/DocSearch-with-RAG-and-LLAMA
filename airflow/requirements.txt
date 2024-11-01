@@ -24,3 +24,4 @@ selenium==4.25.0
 webdriver-manager==4.0.2
 snowflake-connector-python==3.12.2
 snowflake_uuid==0.1.1
+num2words

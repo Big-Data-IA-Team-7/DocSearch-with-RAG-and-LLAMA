@@ -4,12 +4,14 @@ import os
 import boto3
 from botocore.config import Config
 from data_load.data_storage_log import log_success, log_error
+from num2words import num2words
+from data_load.parameter_config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET_NAME
 
 def create_s3_client():
     """Create an S3 client using AWS credentials from environment variables."""
     try:
-        aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-        aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+        aws_access_key_id = AWS_ACCESS_KEY_ID
+        aws_secret_access_key = AWS_SECRET_ACCESS_KEY
         s3_client = boto3.client(
             's3',
             aws_access_key_id=aws_access_key_id,
@@ -63,11 +65,14 @@ def process_and_store_in_s3(df, s3_client, s3_bucket):
             if not pdf_link.startswith('http'):
                 pdf_link = base_url + pdf_link
             log_success(f"Extracted PDF link for '{title}': {pdf_link}")
+
+            idx_name = num2words(int(idx)+1)
+            idx_name = idx_name.strip().replace("-","")
             
-            pdf_file_path = f"/tmp/{idx}_document.pdf"
+            pdf_file_path = f"/tmp/document{idx_name}.pdf"
             downloaded_pdf = download_file(pdf_link, pdf_file_path)
             if downloaded_pdf:
-                pdf_s3_key = f"pdfs/{idx}_document.pdf"
+                pdf_s3_key = f"pdfs/document{idx_name}.pdf"
                 pdf_s3_url = upload_to_s3(s3_client, downloaded_pdf, s3_bucket, pdf_s3_key)
                 df.at[idx, 'PDF_S3_URL'] = pdf_s3_url
                 log_success(f"Successfully uploaded PDF for '{title}' to S3 at {pdf_s3_url}")
@@ -78,10 +83,13 @@ def process_and_store_in_s3(df, s3_client, s3_bucket):
         if image_url:
             log_success(f"Extracted Image URL for '{title}': {image_url}")
 
-            image_file_path = f"/tmp/{idx}_image.jpg"
+            idx_name = num2words(int(idx)+1)
+            idx_name = idx_name.strip().replace("-","")
+
+            image_file_path = f"/tmp/image{idx_name}.jpg"
             downloaded_image = download_file(image_url, image_file_path)
             if downloaded_image:
-                image_s3_key = f"images/{idx}_image.jpg"
+                image_s3_key = f"images/image{idx_name}.jpg"
                 image_s3_url = upload_to_s3(s3_client, downloaded_image, s3_bucket, image_s3_key)
                 df.at[idx, 'Image_S3_URL'] = image_s3_url
                 log_success(f"Successfully uploaded image for '{title}' to S3 at {image_s3_url}")
@@ -98,7 +106,7 @@ def download_and_upload_files_to_s3(**kwargs):
 
         # Initialize S3 client
         s3_client = create_s3_client()
-        s3_bucket_name = os.getenv('S3_BUCKET_NAME')
+        s3_bucket_name = AWS_S3_BUCKET_NAME
 
         # Process and upload files, updating DataFrame with S3 URLs
         df = process_and_store_in_s3(df, s3_client, s3_bucket_name)
