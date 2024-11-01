@@ -1,16 +1,20 @@
 import streamlit as st
 from features.multi_modal_rag import multi_modal_rag
+from features.report_generator import generate_report
 from features.chat_with_pdf import chat_pdf
 from navigation.back import navigate_back
 
 if "chat_with_pdf" not in st.session_state:
     st.session_state.chat_with_pdf = False
+if "report_generation" not in st.session_state:
+    st.session_state.report_generation = False
 
 # Set up the page configuration
 rag_page = st.Page(multi_modal_rag, title="Multi Modal RAG", icon=":material/book:")
 back_page = st.Page(navigate_back, title="Back", icon=":material/logout:")
 
 chat_pdf_page = st.Page(chat_pdf, title="Chat With the PDF", icon=":material/chat:")
+report_page = st.Page(generate_report, title="Report Generator", icon=":material/book:")
 
 
 # Define Navigation
@@ -18,6 +22,13 @@ if st.session_state.chat_with_pdf:
     pg = st.navigation(
         {
             "Features": [chat_pdf_page],
+            "Account": [back_page]
+        }
+    )
+elif st.session_state.report_generation:
+        pg = st.navigation(
+        {
+            "Features": [report_page],
             "Account": [back_page]
         }
     )

@@ -124,5 +124,20 @@ def download_file(pdf_name) -> dict:
     response.raise_for_status()  # Ensure the request was successful
     file_content = response.content
 
-    return {"file_name": filename, "pdf_content": BytesIO(file_content), "extension": extension}
+    # Use /tmp directory for saving files
+    temp_dir = "/tmp/temp_files"
+    os.makedirs(temp_dir, exist_ok=True)
+
+    file_path = os.path.join(temp_dir, filename)
+    with open(file_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            f.write(chunk)
+
+    # Return file details
+    return {
+        "file_name": filename,
+        "pdf_content": BytesIO(file_content),
+        "extension": extension,
+        "file_path": file_path
+    }
 
