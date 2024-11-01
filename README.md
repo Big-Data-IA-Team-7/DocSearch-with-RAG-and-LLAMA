@@ -6,7 +6,7 @@ A comprehensive data ingestion and document exploration application using **Fast
 
 ## Project Resources
 
-- **Google Codelab**: [Codelab Link]()
+- **Google Codelab**: [Codelab Link](https://codelabs-preview.appspot.com/?file_id=19PUe2WgvP52FTphLPKi-rW8FkJG_d2xorLtYUDuqm38/edit?tab=t.0#0)
 - **App (Deployed on AWS EC2)**: [Streamlit Link](http://75.101.133.31:8501/)
 - **Airflow (Deployed on AWS EC2)**: [Airflow Link](http://75.101.133.31:8080/)
 - **YouTube Demo**: [Demo Link](https://www.youtube.com/watch?v=yKyeI7d-krM)
