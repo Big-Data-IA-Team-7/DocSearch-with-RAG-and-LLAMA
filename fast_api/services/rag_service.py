@@ -2,12 +2,15 @@ from pinecone import ServerlessSpec
 from llama_index.vector_stores.pinecone import PineconeVectorStore
 from llama_index.core import VectorStoreIndex, StorageContext, SummaryIndex, Document
 from llama_index.vector_stores.milvus import MilvusVectorStore
-from typing import List, Tuple
-from llama_index.core import QueryBundle
-from llama_index.core.schema import NodeWithScore
-from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.core.vector_stores import (
+    MetadataFilter,
+    MetadataFilters,
+    FilterOperator,
+)
+from llama_index.core import get_response_synthesizer
 from llama_index.core.query_engine import RetrieverQueryEngine
-from fast_api.schemas.hybrid_schema import CustomRetriever
+from llama_index.core.postprocessor import SimilarityPostprocessor
+import logging
 
 def create_vector_index(pinecone_client, index_name, documents):
     pinecone_client.create_index(
@@ -36,15 +39,38 @@ def retrieve_query(index_name, user_question, pinecone_client):
 
     pinecone_index = pinecone_client.Index(index_name)
 
+    filters = MetadataFilters(
+        filters=[
+            MetadataFilter(
+                key="index_type", operator=FilterOperator.EQ, value="research_index"
+            ),
+        ]
+    )
+
     # Initialize VectorStore
     vector_store = PineconeVectorStore(pinecone_index=pinecone_index)
 
     vector_index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
+    
+    retriever = vector_index.as_retriever(filters=filters)
 
-    summary_query_engine = vector_index.as_query_engine(similarity_top_k=5)
+    response_synthesizer = get_response_synthesizer()
 
-    llm_query = summary_query_engine.query(user_question)
-    response_text = llm_query.response
+    custom_query_engine = RetrieverQueryEngine(
+        retriever=retriever,
+        response_synthesizer=response_synthesizer,
+        node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=0.8)]
+    )
+
+    response = custom_query_engine.query(user_question)
+    response_text = response.response
+
+    if response_text == "Empty Response":
+
+        summary_query_engine = vector_index.as_query_engine(similarity_top_k=5)
+
+        llm_query = summary_query_engine.query(user_question)
+        response_text = llm_query.response
 
     return response_text
 
@@ -81,39 +107,3 @@ def research_index_create(index_name, pinecone_client, question_answer):
     vector_index.insert(doc)
 
     return vector_index
-
-# def retrieve_query_workflow(index_name, user_question, pinecone_client, document_ids: List[str]) -> Tuple[str, List[NodeWithScore]]:
-#     # Initialize Pinecone index and VectorStore
-#     pinecone_index = pinecone_client.Index(index_name)
-#     vector_store = PineconeVectorStore(pinecone_index=pinecone_index)
-
-#     # Initialize the vector index from the vector store
-#     vector_index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
-
-#     # Set up the retrievers for filtered and unfiltered queries
-#     vector_retriever_all = VectorIndexRetriever(index=vector_index, similarity_top_k=5)
-#     vector_retriever_filtered = CustomRetriever(
-#         vector_retriever=vector_retriever_all,
-#         document_ids=set(document_ids)
-#     )
-
-#     # Define query engines
-#     filtered_query_engine = RetrieverQueryEngine(retriever=vector_retriever_filtered)
-#     full_query_engine = RetrieverQueryEngine(retriever=vector_retriever_all)
-
-#     # Create the query bundle
-#     query_bundle = QueryBundle(user_question)
-
-#     # Perform the initial query on the filtered document set
-#     filtered_response = filtered_query_engine.query(query_bundle)
-#     if filtered_response and filtered_response.response and filtered_response.similarity_score >= 0.7:
-#         # If similarity score >= 0.7, return filtered response
-#         response_text = filtered_response.response
-#         retrieved_docs = [doc for doc in filtered_response.documents]
-#         return response_text, retrieved_docs
-#     else:
-#         # If similarity score < 0.7, query across all documents
-#         full_response = full_query_engine.query(query_bundle)
-#         response_text = full_response.response
-#         retrieved_docs = [doc for doc in full_response.documents]
-#         return response_text, retrieved_docs
