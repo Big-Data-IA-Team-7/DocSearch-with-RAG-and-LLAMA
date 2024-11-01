@@ -1,4 +1,4 @@
-# Automating Text Extraction and Client-Facing Application
+# DocSearch-with-RAG-and-LLAMA
 
 ## Overview
 
