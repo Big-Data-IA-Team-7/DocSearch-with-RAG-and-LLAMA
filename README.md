@@ -105,7 +105,7 @@ docker run -d -p 8080:8080 ramkumarr16077/airflow-image-2:latest
 |-----------------------------|-------------------------------------------------------------------------------------------------------------------|
 | Pragnesh Anekal             | 33% - Building FastAPI end points, generate Summary, Report Generation, Creating Pinecone Index  , Deploying Streamlit and FastAPI  |
 | Ram Kumar Ramasamy Pandiaraj| 33% - Web Scraping, Parsing the data, loading into S3 and Snowflake , Building and deploying Airflow Pipeline       |
-| Dipen Manoj Patel           | 33% - Summary Generation, Vecotr Index, Setting up Milvus, Streamlit Front End, Deploying Streamlit |
+| Dipen Manoj Patel           | 33% - Summary Generation, Vector Index, Setting up Milvus, Streamlit Front End, Deploying Streamlit |
 
 
 
