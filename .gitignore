@@ -167,3 +167,4 @@ cython_debug/
 /pipeline_storage
 *.db
 *.lock
+/storage_nodes_summary_documenttwo

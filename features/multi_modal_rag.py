@@ -18,12 +18,12 @@ def multi_modal_rag():
         st.session_state.data_frame = None
     if 'file_name' not in st.session_state:
         st.session_state.file_name = None
-    if 'index' not in st.session_state:
-        st.session_state.index = None
     if 'history' not in st.session_state:
         st.session_state.history = None
     if 'title' not in st.session_state:
         st.session_state.title = None
+    if 'file_path' not in st.session_state:
+        st.session_state.file_path = None
 
     st.title('Multi Modal RAG')
 
@@ -57,7 +57,7 @@ def multi_modal_rag():
                     )
 
                     if response_pdf.status_code == 200:
-
+                        
                         download_fragment(response_pdf.content, st.session_state.file_name)
 
                     else:
@@ -67,7 +67,7 @@ def multi_modal_rag():
                     st.subheader(selected_row['TITLE'])
                     st.write("**Summary**: ", selected_row['BRIEF_SUMMARY'])
                 
-                chat_col, summary_col = st.columns([1, 3])
+                chat_col, summary_col, report_col = st.columns(3)
 
                 if chat_col.button("**Chat With PDF**"):
                         st.session_state.chat_with_pdf = True
@@ -117,6 +117,10 @@ def multi_modal_rag():
                             st.write("**Summary**: ", summary["response"])
                         else:
                             st.error(f"Failed to create index. Status code: {response_summary.status_code}")
+                if report_col.button("**Report Based Responses**"):
+                    st.session_state.report_generation= True
+                    st.session_state.file_path = response_pdf.headers.get("X-File-Path")
+                    st.rerun()
                 pdf_viewer(input=response_pdf.content,
                         width=700, height=700)
         else:
