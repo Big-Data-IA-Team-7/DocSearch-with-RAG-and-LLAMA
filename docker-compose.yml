@@ -1,0 +1,27 @@
+services:
+  fastapi:
+    build: .
+    ports:
+      - '8000:8000'
+    command: uvicorn fast_api.fastapi_setup:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/code
+    networks:
+      - app_network
+
+  streamlit:
+    build: .
+    ports:
+      - '8501:8501'
+    command: streamlit run streamlit_app.py --server.port 8501
+    volumes:
+      - .:/code
+      - ./temp_files:/code/temp_files 
+    environment:
+      - FASTAPI_DEV_URL=http://fastapi:8000
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
