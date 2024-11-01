@@ -6,7 +6,6 @@ from fast_api.services.data_service import download_file
 from fast_api.config.config_settings import initialize_settings, initialize_summary_settings
 from fast_api.services.multi_modal.document_parser import load_multimodal_data
 from fastapi.responses import JSONResponse
-import re
 import logging
 
 number_to_word = {

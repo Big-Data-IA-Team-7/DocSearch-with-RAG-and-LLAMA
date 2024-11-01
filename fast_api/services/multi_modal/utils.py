@@ -7,6 +7,7 @@ from io import BytesIO
 from PIL import Image
 import requests
 from llama_index.llms.nvidia import NVIDIA
+from parameter_config import NVIDIA_API_KEY
 
 def get_b64_image_from_content(image_content):
     """Convert image content to base64 encoded string."""
@@ -33,7 +34,7 @@ def describe_image(image_content):
     """Generate a description of an image using NVIDIA API."""
     image_b64 = get_b64_image_from_content(image_content)
     invoke_url = "https://ai.api.nvidia.com/v1/vlm/nvidia/neva-22b"
-    api_key = os.environ["NVIDIA_API_KEY"]
+    api_key = NVIDIA_API_KEY
     
     if not api_key:
         raise ValueError("NVIDIA API Key is not set. Please set the NVIDIA_API_KEY environment variable.")
@@ -64,7 +65,7 @@ def process_graph_deplot(image_content):
     """Process a graph image using NVIDIA's Deplot API."""
     invoke_url = "https://ai.api.nvidia.com/v1/vlm/google/deplot"
     image_b64 = get_b64_image_from_content(image_content)
-    api_key = os.environ["NVIDIA_API_KEY"]
+    api_key = NVIDIA_API_KEY
     if not api_key:
         raise ValueError("NVIDIA API Key is not set. Please set the NVIDIA_API_KEY environment variable.")
 

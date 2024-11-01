@@ -33,6 +33,7 @@ python-multipart = "^0.0.17"
 streamlit-pdf-viewer = "^0.0.19"
 llama-index-callbacks-arize-phoenix = "^0.2.1"
 llama-index-multi-modal-llms-openai = "^0.2.3"
+awscli = "^1.35.20"
 
 
 [build-system]

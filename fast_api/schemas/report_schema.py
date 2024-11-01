@@ -1,7 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import List, Union
-import streamlit as st
-from PIL import Image
 
 system_prompt = """\
 You are a report generation assistant tasked with producing a well-formatted context given parsed context.
@@ -13,7 +11,8 @@ Since you cannot directly produce an image, the image block takes in a file path
 
 How do you know which image to generate? Each context chunk will contain metadata including an image render of the source chunk, given as a file path. 
 Include ONLY the images from the chunks that have heavy visual elements (you can get a hint of this if the parsed text contains a lot of tables).
-When the text talks about charts, you MUST obtain the chart (image block) associated with the text and You MUST include at least one image block in the output. 
+When the text talks about charts or a particular Figure, you MUST obtain the image block associated with it.
+You MUST include at least one image block in the output. 
 
 You MUST output your response as a tool call in order to adhere to the required output format. Do NOT give back normal text.
 

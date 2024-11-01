@@ -1,9 +1,9 @@
 import streamlit as st
 import requests
-import os
 from PIL import Image
 from pydantic import TypeAdapter
 from fast_api.schemas.report_schema import ReportOutput, TextBlock, ImageBlock
+from parameter_config import FAST_API_DEV_URL
 
 def render_streamlit(blocks):
     """Render blocks in Streamlit."""
@@ -27,7 +27,7 @@ def generate_report():
                 "user_input": question
             }
             response = requests.get(
-                f"{os.getenv('FASTAPI_DEV_URL')}/query/generate-report/",
+                f"{FAST_API_DEV_URL}/query/generate-report/",
                 params=params
             )
             if response.status_code == 200:
