@@ -1,14 +1,14 @@
 # data_retrieval.py
 import snowflake.connector
-from fast_api.config.config_settings import close_my_sql_connection, create_snowflake_connection
+from fast_api.config.config_settings import create_snowflake_connection
 import pandas as pd
 import boto3
 from urllib.parse import urlparse, unquote
 import os
 import requests
-import tempfile
 from dotenv import load_dotenv 
 from io import BytesIO
+from parameter_config import ACCESS_KEY_ID_AWS, SECRET_ACCESS_KEY_AWS, S3_BUCKET_NAME_AWS
 
 # Load environment variables from .env file (if applicable)
 load_dotenv()
@@ -51,10 +51,6 @@ def fetch_data_from_db() -> pd.DataFrame:
         print(f"An unexpected error occurred: {e}")
         return None
 
-    finally:
-        # Ensure that the cursor and connection are properly closed
-        close_my_sql_connection(mydb, mydata)
-
 
 def fetch_pdf_urls_from_snowflake():
     conn=create_snowflake_connection()
@@ -86,8 +82,8 @@ def parse_s3_url(s3_url):
 
 def download_pdf_from_s3(bucket, key, local_file_name):
     s3 = boto3.client('s3',
-                      aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-                      aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+                      aws_access_key_id=ACCESS_KEY_ID_AWS,
+                      aws_secret_access_key=SECRET_ACCESS_KEY_AWS)
     
     # Download the file
     s3.download_file(bucket, key, local_file_name)
@@ -99,12 +95,12 @@ def generate_presigned_url(pdf_name, expiration: int = 3600) -> str:
     try:
 
         s3 = boto3.client('s3',
-                  aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
-                  aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
-
+                  aws_access_key_id=ACCESS_KEY_ID_AWS,
+                  aws_secret_access_key=SECRET_ACCESS_KEY_AWS
+        )
         # Generate pre-signed URL that expires in the given time (default: 1 hour)
         presigned_url = s3.generate_presigned_url('get_object',
-                                                  Params={'Bucket': os.environ['AWS_S3_BUCKET_NAME'], 'Key': key},
+                                                  Params={'Bucket': S3_BUCKET_NAME_AWS, 'Key': key},
                                                   ExpiresIn=expiration)
         return presigned_url
     except Exception as e:

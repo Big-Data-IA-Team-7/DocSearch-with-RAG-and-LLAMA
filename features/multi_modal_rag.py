@@ -1,9 +1,9 @@
-import os
 import streamlit as st
 import requests
 import pandas as pd
 from streamlit_pdf_viewer import pdf_viewer
 from dotenv import load_dotenv
+from parameter_config import FAST_API_DEV_URL
 
 # Load environment variables
 load_dotenv()
@@ -14,6 +14,7 @@ def download_fragment(file_content: bytes, file_name: str) -> None:
 
 def multi_modal_rag():
 
+    print(FAST_API_DEV_URL)
     if 'data_frame' not in st.session_state:
         st.session_state.data_frame = None
     if 'file_name' not in st.session_state:
@@ -25,10 +26,10 @@ def multi_modal_rag():
     if 'file_path' not in st.session_state:
         st.session_state.file_path = None
 
-    st.title('Multi Modal RAG')
+    st.title('Multi Modal RAG, Summary and Report Generation App')
 
     # Fetch data from FastAPI endpoint
-    response = requests.get(f"{os.getenv('FASTAPI_DEV_URL')}/data/get-data/")
+    response = requests.get(f"{FAST_API_DEV_URL}/data/get-data/")
     if response.status_code == 200:
         data = response.json()
         st.session_state.data_frame = pd.DataFrame(data)
@@ -51,7 +52,7 @@ def multi_modal_rag():
                     st.session_state.file_name = pdf_url.split("/")[-1]
                     
                     response_pdf = requests.get(
-                        f"{os.getenv('FASTAPI_DEV_URL')}/data/extract-file/",
+                        f"{FAST_API_DEV_URL}/data/extract-file/",
                         params={"file_name": st.session_state.file_name},
                         stream=True
                     )
@@ -83,7 +84,7 @@ def multi_modal_rag():
 
 
                             response_index = requests.post(
-                                f"{os.getenv('FASTAPI_DEV_URL')}/index/create-index/",
+                                f"{FAST_API_DEV_URL}/index/create-index/",
                                 data=data,
                                 files=files
                             )
@@ -107,7 +108,7 @@ def multi_modal_rag():
 
 
                         response_summary = requests.get(
-                            f"{os.getenv('FASTAPI_DEV_URL')}/query/generate-summary/",
+                            f"{FAST_API_DEV_URL}/query/generate-summary/",
                             data=data,
                             files=files
                         )

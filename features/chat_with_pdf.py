@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-import os
+from parameter_config import FAST_API_DEV_URL
 
 def chat_pdf():
     st.title(f"Chat with {st.session_state.title}")
@@ -33,7 +33,7 @@ def chat_pdf():
                 "user_question": user_input
             }
             response = requests.get(
-                f"{os.getenv('FASTAPI_DEV_URL')}/query/ask-question/",
+                f"{FAST_API_DEV_URL}/query/ask-question/",
                 params=params
             )
 
@@ -52,7 +52,7 @@ def chat_pdf():
         }
         
         response_index = requests.post(
-            f"{os.getenv('FASTAPI_DEV_URL')}/index/create-research-index/",
+            f"{FAST_API_DEV_URL}/index/create-research-index/",
             params=params
         )
 
