@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fast_api.config.config_settings import get_pinecone_client
-from fast_api.services.rag_service import retrieve_query, create_generate_summary, create_summary_index, retrieve_summary_response
+from fast_api.services.rag_service import retrieve_query, create_generate_summary
 from fast_api.services.report_service import report_generate
 from fast_api.services.data_service import download_file
 from fast_api.config.config_settings import initialize_settings, initialize_summary_settings
@@ -32,9 +32,9 @@ def ask_question(file_name: str, user_question: str, pinecone_client = Depends(g
 
         # Initialize the query engine and get the answer
         initialize_settings()
-        response = retrieve_query(file_name, user_question, pinecone_client)
-        logging.debug(f"Response received: {response}")
-        return response
+        response_text = retrieve_query(file_name, user_question, pinecone_client)
+        logging.debug(f"Response received: {response_text}")
+        return response_text
         # return {"answer": answer, "chat_history": chat_history}
     except Exception as e:
         logging.error("Error", e)
@@ -51,48 +51,6 @@ def generate_summary(file_name: str = Form(...),
         documents = load_multimodal_data(file_detail)
 
         response = create_generate_summary(documents)
-
-        logging.debug(f"Response received: {response}")
-        return response
-        # return {"answer": answer, "chat_history": chat_history}
-    except Exception as e:
-        logging.error("Error", e)
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@router.get("/retrieve-summary/")
-def retrieve_summary(file_name: str = Form(...),
-    pdf_content: UploadFile = File(...),
-    pinecone_client = Depends(get_pinecone_client)):
-    try:
-        # Initialize the query engine and get the answer
-        match = re.match(r"(\d+)_(.*)\.pdf$", file_name)
-        if match:
-            number = match.group(1)
-            rest_of_name = match.group(2)
-            worded_number = number_to_word.get(number, number)  # Get worded number if exists
-            file_name = f"{worded_number}{rest_of_name}summary"
-        
-        initialize_summary_settings()
-        
-        if pinecone_client.has_index(file_name):
-            
-            status = "index_already_exists"
-            
-            response = retrieve_summary_response(pinecone_client, file_name)
-            
-        else:
-
-            # Create Document and new VectorIndex, then add to Pinecone
-            file_detail = {"name": file_name, "content": pdf_content.file}
-            documents = load_multimodal_data(file_detail)
-
-            vector_index = create_summary_index(pinecone_client, file_name, documents)
-
-            logging.info("Summary Index created.")
-
-            response = retrieve_summary_response(pinecone_client, file_name)
-
-        response = create_generate_summary(pinecone_client, file_name)
 
         logging.debug(f"Response received: {response}")
         return response

@@ -2,7 +2,7 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Form
 from fast_api.config.config_settings import get_pinecone_client, initialize_settings
 from fast_api.services.multi_modal.document_parser import load_multimodal_data
-from fast_api.services.rag_service import create_vector_index
+from fast_api.services.rag_service import create_vector_index, research_index_create
 import logging
 
 router = APIRouter()
@@ -34,4 +34,21 @@ def create_index(file_name: str = Form(...),
     except Exception as e:
             logging.error(f"Error in index creation process: {e}")
             raise HTTPException(status_code=500, detail="Error creating index")
-        
+
+@router.post("/create-research-index/")
+def create_research_index(file_name: str,
+                        question_answer: str, 
+                        pinecone_client=Depends(get_pinecone_client)):
+    try:
+        file_name = file_name.replace(".pdf", "")
+        # Check if index exists in Pinecone
+
+        initialize_settings()
+
+        index = research_index_create(file_name, pinecone_client, question_answer)
+
+        status = "index_updated"
+        return {"status": status}
+    except Exception as e:
+        logging.error(f"Error in index creation process: {e}")
+        raise HTTPException(status_code=500, detail="Error creating index")
